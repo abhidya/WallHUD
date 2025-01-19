@@ -179,45 +179,52 @@
     </div>
 
     <script>
-        // Function to fetch predictions from the API
-        async function fetchPredictions() {
-            const apiUrl = 'https://webservices.umoiq.com/api/pub/v1/agencies/sfmta-cis/stopcodes/13915/predictions?key=0be8ebd0284ce712a63f29dcaf7798c4';
+document.addEventListener("DOMContentLoaded", function() {
+    // Function to update the widget with live predictions
+    function updatePredictions() {
+        fetch('https://webservices.umoiq.com/api/pub/v1/agencies/sfmta-cis/stopcodes/13915/predictions?key=0be8ebd0284ce712a63f29dcaf7798c4')
+        .then(response => response.json())
+        .then(data => {
+            // Get the predictions container and clear old content
+            const predictionsContainer = document.getElementById("predictions");
+            predictionsContainer.innerHTML = "";  // Clear old content
 
-            try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
+            // Filter data to only show predictions related to N Judah
+            const nJudahPredictions = data.filter(prediction => prediction.route.title.toLowerCase().includes('n judah'));
 
-                // Extract prediction times and statuses from each route's 'values' field
-                const predictions = data.flatMap(item => item.values.map(prediction => {
-                    return {
-                        time: prediction.minutes,
-                        status: prediction.occupancyDescription,
-                        color: prediction.occupancyDescription.toLowerCase().includes('empty') ? 'empty' : 'many-seats'
-                    };
-                }));
+            if (nJudahPredictions.length > 0) {
+                nJudahPredictions.forEach((prediction, index) => {
+                    if (index < 3) { // Limit to first 3 predictions
+                        const route = prediction.route.title;
+                        const minutes = prediction.values.map(item => item.minutes).join(', ');
 
-                // Ensure there are at least 3 predictions, otherwise fill with "Loading..." or "Unavailable"
-                for (let i = 0; i < 3; i++) {
-                    const predictionElement = document.getElementById(`prediction-${i + 1}`);
-                    if (predictions[i]) {
-                        predictionElement.textContent = `${predictions[i].time} min - ${predictions[i].status}`;
-                        predictionElement.classList.add(predictions[i].color);
-                    } else {
-                        predictionElement.textContent = "Unavailable";
+                        // Create a new element to display the prediction
+                        const predictionElement = document.createElement("div");
+                        predictionElement.classList.add("prediction");
+                        predictionElement.innerHTML = `${route}: Next in ${minutes} minutes.`;
+
+                        predictionsContainer.appendChild(predictionElement);
                     }
-                }
-
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                // Display a fallback message
-                document.querySelectorAll('.prediction').forEach(predictionElement => {
-                    predictionElement.textContent = "Failed to load predictions.";
                 });
+            } else {
+                // If no N Judah predictions available
+                predictionsContainer.innerHTML = "No N Judah predictions available.";
             }
-        }
+        })
+        .catch(error => {
+            console.error('Error fetching predictions:', error);
+            const predictionsContainer = document.getElementById("predictions");
+            predictionsContainer.innerHTML = "Failed to load predictions.";
+        });
+    }
 
-        // Fetch predictions when the page loads
-        fetchPredictions();
+    // Initial call to update the widget with the current data
+    updatePredictions();
+
+    // Set an interval to update the predictions every minute (60000 ms)
+    setInterval(updatePredictions, 60000);
+});
+
     </script>
 <video id="bg-video" autoplay loop muted playsinline>
 
