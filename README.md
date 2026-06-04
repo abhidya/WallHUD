@@ -25,5 +25,6 @@ http://localhost:4173
 ## Notes
 
 - The page fetches live prediction data from a third-party transit API.
+- Later inline experiments also reference a local LAN video host and the OpenWeather/IPInfo APIs; those sections need local credentials or reachable services before they render fully.
 - If that API key, stop code, or service changes, the widget can show `Failed to load predictions`.
 - This is best treated as a small display prototype rather than a production transit dashboard.
